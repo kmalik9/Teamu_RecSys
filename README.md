@@ -7,14 +7,14 @@ This repository contains the design and implementation of the **Teamu Recommende
 ## 2. System Objectives
 
 - **Maximize personalized content delivery**: Provide tailored recommendations to users based on their interactions and preferences.
-- **Generate AI-driven post ideas for user teams**: Use AI to inspire collaboration ideas and new projects.
+- **Generate AI-driven post ideas for user teams**: These embeddings are also leveraged by LLMs to AI-generate high-ranking content for Teamu.
 - **Leverage AI for deep learning recommendations**: Match user and post embeddings for optimal content relevance.
 - **Ensure the system can scale effectively**: Handle new users/posts efficiently, even with cold-start scenarios.
 
 ## 3. Tools and Technologies
 
 - **Languages**: Python, SQL, Dart (for Flutter frontend).
-- **Frameworks**: TensorFlow, TF Recommenders, HuggingFace Transformers (optional for embeddings), PyTorch.
+- **Libraries**: TensorFlow, TF Recommenders, Pandas, Sci-Kit.
 - **Databases**: Supabase (PostgreSQL with pgvector for vector embeddings).
 - **Cloud Services**: Vertex AI (for training and deployment), Supabase Edge Functions.
 - **Tracking and Analytics**: Mixpanel (for event tracking).
@@ -116,7 +116,7 @@ def get_similarity(user_embedding, post_embedding):
 
 ## 9. Deployment
 
-- **Model Deployment**: Use PyTorch’s TorchServe for serving models in production.
+- **Model Deployment**: Use Vertex AI for serving models in production.
 - **Embedding Storage**: Store embeddings in Supabase's pgvector table.
 - **Real-Time Updates**: Utilize Supabase Edge Functions for real-time embedding updates.
 
