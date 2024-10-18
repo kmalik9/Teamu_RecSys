@@ -142,7 +142,7 @@ posts_df = supabase.table("post_features").select("*").execute()
 Compile and train the model using user-post interactions.
 
 ```python
-model.compile(optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.1))
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
 model.fit(cached_train, epochs=3)
 ```
 
