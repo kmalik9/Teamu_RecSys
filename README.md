@@ -104,6 +104,6 @@ The model is deployed via **Vertex AI**, served through a **REST API** with both
 ## Future Enhancements
 
 1. **Cloud Composer (Airflow)**: For advanced DAG orchestration, automating ETL processes.
-2. **Dataflow (Apache Beam)**: To handle real-time, streaming data pipelines.
+2. **Dataflow (Apache Beam)**: To handle massive, real-time, streaming data pipelines.
 3. **Vertex AI Feature Store**: Centralized feature management across training, testing, and serving environments.
-4. **Mini-Batch Clustering and ScaNN**: Enhanced candidate retrieval through similarity search, optimizing Two-Tower model recommendations at scale.
+4. **Mini-Batch Clustering and ScaNN**: Enhanced candidate retrieval for massive datasets through clustering for diversifying content, and ScaNN for candidate reduction, before DLRM ranking.
