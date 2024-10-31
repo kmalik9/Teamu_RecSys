@@ -1,156 +1,109 @@
 
-# Teamu Recommendation System - Two-Tower Architecture
+# Teamu Recommendation System: Two-Tower + DLRM
 
-## 1. Overview
-This repository contains the design and implementation of the **Teamu Recommender System**, focusing on a **Two-Tower architecture**. The system generates embeddings for both users and posts, leveraging deep learning to match them through similarity. It is designed for scalability and personalization while incorporating user profiles and content interactions to generate relevant recommendations.
-
-## 2. System Objectives
-
-- **Maximize personalized content delivery**: Provide tailored recommendations to users based on their interactions and preferences.
-- **Generate AI-driven post ideas for user teams**: These embeddings are also leveraged by LLMs to AI-generate high-ranking content for Teamu.
-- **Leverage AI for deep learning recommendations**: Match user and post embeddings for optimal content relevance.
-- **Ensure the system can scale effectively**: Handle new users/posts efficiently, even with cold-start scenarios.
-
-## 3. Tools and Technologies
-
-- **Languages**: Python, SQL, Dart (for Flutter frontend).
-- **Libraries**: TensorFlow, TF Recommenders, Pandas, Sci-Kit.
-- **Databases**: Supabase (PostgreSQL with pgvector for vector embeddings).
-- **Cloud Services**: Vertex AI (for training and deployment), Supabase Edge Functions.
-- **Tracking and Analytics**: Mixpanel (for event tracking).
-
-## 4. User and Content Features
-
-### User Features
-- **Content Data**: Passions, Location, Project Titles, Created Posts, Bio.
-- **Behavioral Data**: Viewed, Upvoted, and Commented Posts.
-- **Embeddings**: Generated and stored in the `user_embeddings` table.
-
-### Post Features
-- **Content Data**: Post ID, Title, Description, Post Length, Comments, Global/Local, User Location (if local).
-- **Embeddings**: Stored in the `post_embeddings` table, generated from title, description, and comments.
-- **Interaction Features**: Logs every user's interaction with posts (views, likes, comments, votes).
-
-## 5. Database Schema
-
-```sql
-CREATE TABLE user_features (
-   user_id SERIAL PRIMARY KEY,
-   passions TEXT[],
-   location GEOGRAPHY,
-   bio TEXT,
-   embedding VECTOR(512),
-   created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE post_features (
-   post_id SERIAL PRIMARY KEY,
-   user_id INTEGER REFERENCES users(user_id),
-   title TEXT,
-   description TEXT,
-   post_length INTEGER,
-   comments TEXT[],
-   vote_count INTEGER DEFAULT 0,
-   view_count INTEGER DEFAULT 0,
-   avg_time_viewed INTERVAL,
-   location GEOGRAPHY,
-   embedding VECTOR(512),
-   created_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
-
-## 6. Model Architecture
-
-### 6.1 User Tower
-This model generates embeddings for users based on their profile and interaction data. It includes:
-
-- **Categorical features**: Passions, Location.
-- **Behavioral features**: Count of liked, commented, and viewed posts.
-- **Final Dense Layer**: Produces the user embedding vector.
-
-```python
-class UserTower(nn.Module):
-    def __init__(self, num_users, embed_dim):
-        super(UserTower, self).__init__()
-        self.user_embedding = nn.Embedding(num_users, embed_dim)
-        self.fc = nn.Linear(embed_dim, embed_dim)
-    def forward(self, user_id):
-        user_embed = self.user_embedding(user_id)
-        return self.fc(user_embed)
-```
-
-### 6.2 Post Tower
-Generates embeddings for posts based on their content features, including title, description, and interaction data.
-
-```python
-class PostTower(nn.Module):
-    def __init__(self, num_posts, embed_dim):
-        super(PostTower, self).__init__()
-        self.post_embedding = nn.Embedding(num_posts, embed_dim)
-        self.fc = nn.Linear(embed_dim, embed_dim)
-    def forward(self, post_id):
-        post_embed = self.post_embedding(post_id)
-        return self.fc(post_embed)
-```
-
-### 6.3 Similarity Matching
-Embeddings from both towers are compared using dot product similarity.
-
-```python
-def get_similarity(user_embedding, post_embedding):
-    return torch.dot(user_embedding, post_embedding)
-```
-
-## 7. Recommendation Algorithm
-
-1. **User and Post Embedding Retrieval**: Fetch embeddings from the database.
-2. **Ranking**: Rank posts based on similarity to the user's embedding.
-3. **Real-Time Personalization**: Continuously update user embeddings based on interactions.
-
-## 8. Evaluation Metrics
-
-- **Precision/Recall**: Measure how accurately recommendations match user preferences.
-- **Click-Through Rate (CTR)**: Percentage of recommended posts clicked by users.
-- **Diversity**: Ensure varied content is shown.
-- **Cold Start Performance**: Test the model's handling of new users and posts.
-
-## 9. Deployment
-
-- **Model Deployment**: Use Vertex AI for serving models in production.
-- **Embedding Storage**: Store embeddings in Supabase's pgvector table.
-- **Real-Time Updates**: Utilize Supabase Edge Functions for real-time embedding updates.
-
-## 10. Installation and Setup
-
-### Required Libraries
-
-```bash
-pip install tensorflow-recommenders tensorflow supabase pandas sklearn h3
-```
-
-### Data Preparation and Processing
-Load, normalize, and process features from Supabase, including text and location-based features.
-
-```python
-user_data = supabase.table("user_features").select("*").execute()
-posts_df = supabase.table("post_features").select("*").execute()
-```
-
-## 11. Training and Recommendations
-
-### Model Training
-Compile and train the model using user-post interactions.
-
-```python
-model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
-model.fit(cached_train, epochs=3)
-```
-
-### Generate Recommendations
-Index and serve recommendations for users in real-time.
-
-```python
-_, post_ids = index(tf.constant([user_id]))
-```
+Welcome! This repository showcases the Teamu Recommendation System, designed to deliver highly personalized content suggestions on a social productivity platform. Built with a **Two-Tower + DLRM (Deep Learning Recommendation Model)** approach, this system combines efficient candidate generation and advanced ranking to optimize user engagement.
 
 ---
+
+## Table of Contents
+- [Project Overview](#project-overview)
+- [System Objectives](#system-objectives)
+- [System Architecture](#system-architecture)
+- [Features and Design Decisions](#features-and-design-decisions)
+- [Tools and Technologies](#tools-and-technologies)
+- [Data Pipeline](#data-pipeline)
+- [Model Training and Evaluation](#model-training-and-evaluation)
+- [Deployment](#deployment)
+- [Future Enhancements](#future-enhancements)
+
+---
+
+## Project Overview
+
+The **Teamu Recommendation System** powers personalized content suggestions on a social productivity app, enabling efficient and scalable recommendations across millions of users. Built on **Google Cloud Platform**, this system leverages **Vertex AI**, **BigQuery**, and **GCS** to provide rapid candidate retrieval and accurate ranking. With a dual model approach, Teamu is designed to maximize engagement, improve content relevance, and enable effective scaling.
+
+## System Objectives
+
+1. **Maximize Personalized Content Delivery**: Provide tailored recommendations to users based on their interests, activity history, and preferences.
+2. **Generate AI-Driven Post Ideas**: Leverage embeddings for AI-generated content ideas, providing users with high-ranking post suggestions that align with community needs.
+3. **Leverage AI for Deep Learning Recommendations**: Match user and post embeddings to deliver relevant, engaging content across various interaction types.
+4. **Ensure System Scalability**: Scale efficiently to handle new users and posts, even in cold-start scenarios.
+
+## System Architecture
+
+### Cloud Architecture Diagram
+
+![image|500](https://github.com/user-attachments/assets/bd12109c-371a-40e4-b5c9-f04d9cdd97af)
+
+### Model Architecture Diagram
+
+![image|500](https://github.com/user-attachments/assets/d6e1383f-9db1-4d40-9d8d-6d882d2dc022)
+
+
+### Two-Tower Model
+The Two-Tower model handles candidate generation, creating separate embeddings for users and posts:
+- **User Tower**: Encodes user data like passions, project titles, and bio.
+- **Post Tower**: Encodes post data, excluding comments, focusing on titles and descriptions.
+- **Similarity Measure**: Utilizes dot product to compute similarity scores between user and post embeddings.
+- **Loss Function**: Optimizes with softmax loss for relevant candidate generation.
+
+### DLRM (Deep Learning Recommendation Model)
+The DLRM ranks candidates generated by the Two-Tower model using both sparse and dense features:
+- **Sparse Features**: Metrics like view counts, login frequency, and CTR.
+- **Dense Features**: Embeddings from the Two-Tower model, providing in-depth ranking signals.
+- **Wide and Deep Learning**: Uses linear models for low-order features and deep learning for high-order interactions, creating a balance between model complexity and interpretability.
+
+## Features and Design Decisions
+
+- **Scalable Deployment**: Supports high-volume traffic with Vertex AI pipelines and GCS for storage, alongside BigQuery for fast feature retrieval.
+- **Real-Time Data Ingestion**: Utilizes **Pub/Sub** to monitor data intake from **Supabase** pg_cron-scheduled data deliveries, enabling efficient feature updates.
+- **Efficient Storage and Retrieval**: Embeddings are stored as 32-dimensional vectors in GCS (`vector_bucket/user_embeddings` and `vector_bucket/post_embeddings`).
+- **Cold-Start Handling**: Ensures recommendations are available for new users and posts, maintaining relevancy with minimal historical data.
+
+## Tools and Technologies
+
+- **Languages**: Python, SQL
+- **Libraries**: TensorFlow, TF Recommenders, Pandas, NumPy, Transformers, and others
+- **Databases**: Supabase (PostgreSQL), Google Cloud Storage (TFRecords, embedding storage), BigQuery (for scalable feature engineering)
+- **Cloud Services**: Vertex AI (pipelines, training, deployment), Pub/Sub, pg_cron
+
+## Data Pipeline
+
+### Overview
+A scalable data pipeline powers the recommendation system, managing high-volume data to keep recommendations relevant and personalized.
+
+### Key Steps
+1. **Data Ingestion**: Interaction data (e.g., views, votes, comments) flows into BigQuery.
+2. **Feature Engineering**:
+   - **Sparse Features**: Interaction counts and login frequencies.
+   - **Dense Features**: Embeddings generated by the Two-Tower model, along with additional metrics for ranking.
+3. **Storage**: Embeddings and interaction data are stored in GCS and BigQuery for rapid retrieval.
+
+## Model Training and Evaluation
+
+### Two-Tower Model
+- **Objective**: Optimizes for softmax loss, enhancing relevance through dot-product similarity.
+- **Training Framework**: TensorFlow
+- **Evaluation Metric**: Measures candidate relevance through recall metrics.
+
+### DLRM
+- **Objective**: Minimizes cross-entropy loss to maximize ranking accuracy.
+- **Features**: Uses both sparse (interaction counts) and dense (embeddings) features.
+- **Evaluation Metrics**: Tracks AUC and CTR to evaluate ranking effectiveness on interaction data.
+
+### Offline and Online Testing
+The system is validated with offline recall and AUC metrics, alongside plans for A/B testing to measure real-world impact.
+
+## Deployment
+
+The model is deployed via **Vertex AI**, served through a **REST API** with both batch and real-time recommendations. TensorFlow Serving is used to manage models, and a pipeline orchestrates real-time data ingestion.
+
+- **Model Artifacts**: Stored in `model_bucket` on GCS for streamlined deployment and version management.
+- **Scalability**: Managed with Kubernetes for auto-scaling and load balancing, adapting to changing traffic demands.
+
+## Future Enhancements
+
+1. **Cloud Composer (Airflow)**: For advanced DAG orchestration, automating ETL processes.
+2. **Dataflow (Apache Beam)**: To handle real-time, streaming data pipelines.
+3. **Vertex AI Feature Store**: Centralized feature management across training, testing, and serving environments.
+4. **Mini-Batch Clustering and ScaNN**: Enhanced candidate retrieval through similarity search, optimizing Two-Tower model recommendations at scale.
